@@ -26,6 +26,7 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	//소켓 통신의 원만함을 위해 인증 부분 주석처리
 	// implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	// implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
