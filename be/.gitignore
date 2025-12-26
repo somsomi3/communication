@@ -41,3 +41,21 @@ out/
 
 ### Local docker-compose ###
 docker-compose.yml
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+*.env
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Java
+*.class
+
+# JARs (just in case)
+*.jar
