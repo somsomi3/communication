@@ -1,0 +1,19 @@
+package com.be.tcp;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+//실행
+//Spring Boot가 켜질 때 자동으로 실행
+//TCP 서버를 백그라운드 스레드에서 띄움
+
+@Component
+public class TcpRunner implements CommandLineRunner {
+
+    @Override
+    public void run(String... args) {
+        TcpServer server = new TcpServer(5000);
+        new Thread(server::start).start();
+        System.out.println("[TCP RUNNER] TCP Server started");
+    }
+}
