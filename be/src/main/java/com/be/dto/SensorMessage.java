@@ -4,6 +4,9 @@ import java.util.Map;
 //데이터 설계도
 //센서데이터의 모양을 정의하는 클래스(통신 데이터의 표준 포맷)
 //TCP / UDP / MQTT / WebSocket / Kafka 모두 이런형태로 흘러감.
+
+//DTO ≠ Entity
+
 public class SensorMessage {
     private String protocol;
     private String sourceId;
