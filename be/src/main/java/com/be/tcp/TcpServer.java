@@ -4,7 +4,9 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+
 import com.be.dto.SensorMessage;
+import com.be.service.SensorDataService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 //TCP 데이터 받기
@@ -16,10 +18,12 @@ public class TcpServer {
 
     private final int port;
     private final ObjectMapper objectMapper;
+    private final SensorDataService sensorDataService;
 
-    public TcpServer(int port, ObjectMapper objectMapper) {
+    public TcpServer(int port, ObjectMapper objectMapper, SensorDataService sensorDataService) {
         this.port = port;
         this.objectMapper = objectMapper;
+        this.sensorDataService = sensorDataService;
     }
 
 
@@ -28,41 +32,32 @@ public class TcpServer {
             System.out.println("[TCP SERVER] Started on port " + port);
 
             while (true) {
+                //TCP 수신
                 Socket client = serverSocket.accept(); //클라이언트 접속 대기 (block)
                 System.out.println("[TCP SERVER] Client connected: " + client.getInetAddress());
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
-                // BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
 
                 String message;
                 while ((message = reader.readLine()) != null) {
-                    System.out.println("[TCP SERVER] Received: " + message);
-
-                //네트워크 연결 테스트용 Echo서버
-                //     writer.write("Echo: " + message + "\n");
-                //     writer.flush();
-                // }
-
-                //JSON을 파싱해서 구조화하는 서버
+                    
                     try {
-                        SensorMessage sensorMessage =
+                        // 1. JSON → SensorMessage
+                        SensorMessage sm =
                                 objectMapper.readValue(message, SensorMessage.class);
 
-                        System.out.println("[PARSED]");
-                        System.out.println(" protocol  : " + sensorMessage.getProtocol());
-                        System.out.println(" sourceId  : " + sensorMessage.getSourceId());
-                        System.out.println(" type      : " + sensorMessage.getType());
-                        System.out.println(" timestamp : " + sensorMessage.getTimestamp());
-                        System.out.println(" payload   : " + sensorMessage.getPayload());
+                       sensorDataService.saveFromMessage(sm);
+
+                        System.out.println("[TCP] Sensor data saved");
 
                     } catch (Exception e) {
-                        System.out.println("[ERROR] Invalid JSON format");
+                        System.out.println("[ERROR] Invalid TCP message");
                         e.printStackTrace();
                     }
                 }
+
                 client.close();
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
