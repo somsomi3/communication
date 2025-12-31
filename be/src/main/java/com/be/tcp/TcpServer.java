@@ -7,6 +7,7 @@ import java.net.Socket;
 
 import com.be.dto.SensorMessage;
 import com.be.service.SensorDataService;
+import com.be.service.SensorRealtimeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 //TCP 데이터 받기
@@ -19,11 +20,13 @@ public class TcpServer {
     private final int port;
     private final ObjectMapper objectMapper;
     private final SensorDataService sensorDataService;
+    private final SensorRealtimeService sensorRealtimeService;
 
-    public TcpServer(int port, ObjectMapper objectMapper, SensorDataService sensorDataService) {
+    public TcpServer(int port, ObjectMapper objectMapper, SensorDataService sensorDataService, SensorRealtimeService sensorRealtimeService) {
         this.port = port;
         this.objectMapper = objectMapper;
         this.sensorDataService = sensorDataService;
+        this.sensorRealtimeService = sensorRealtimeService;
     }
 
 
@@ -47,6 +50,9 @@ public class TcpServer {
                                 objectMapper.readValue(message, SensorMessage.class);
 
                        sensorDataService.saveFromMessage(sm);
+                       //+Redis에 저장
+                       sensorRealtimeService.saveLatest(sm);
+
 
                         System.out.println("[TCP] Sensor data saved");
 
