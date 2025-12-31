@@ -24,7 +24,7 @@ public class SensorRealtimeService {
 
         if (message.getSourceId() == null) return;
 
-        String key = "sensor:latest:" + message.getSourceId();
+        String key = "sensor:latest:" +  message.getProtocol().toLowerCase() + ":" + message.getSourceId();
         Map<String, Object> payload = message.getPayload();
 
         if (payload == null) return;
