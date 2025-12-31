@@ -3,6 +3,10 @@ package com.be.udp;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
+import com.be.dto.SensorMessage;
+import com.be.service.SensorRealtimeService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 //UDP 패킷 받기
 
 // UDP 포트 열기
@@ -12,8 +16,18 @@ import java.net.DatagramSocket;
 public class UdpServer {
 
     private final int port;
+    private final ObjectMapper objectMapper;
+    private final SensorRealtimeService sensorRealtimeService;
 
-    public UdpServer(int port) { this.port = port; }
+    public UdpServer(
+            int port,
+            ObjectMapper objectMapper,
+            SensorRealtimeService sensorRealtimeService
+    ) {
+        this.port = port;
+        this.objectMapper = objectMapper;
+        this.sensorRealtimeService = sensorRealtimeService;
+    }
 
     public void start() {
         try (DatagramSocket socket = new DatagramSocket(port)) {
@@ -23,10 +37,24 @@ public class UdpServer {
 
             while (true) {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet); //패킷 하나 수신, 오면 바로 처리
+                socket.receive(packet);
 
-                String msg = new String(packet.getData(), 0, packet.getLength()); //받은 데이터 복원
-                System.out.println("[UDP SERVER] Received: " + msg);
+                String msg = new String(packet.getData(), 0, packet.getLength());
+
+                try {
+                    // 1️. JSON → SensorMessage
+                    SensorMessage sm =
+                            objectMapper.readValue(msg, SensorMessage.class);
+
+                    // 2️. Redis 저장 (실시간)
+                    sensorRealtimeService.saveLatest(sm);
+
+                    System.out.println("[UDP] Sensor data saved to Redis");
+
+                } catch (Exception e) {
+                    System.out.println("[ERROR] Invalid UDP message");
+                    e.printStackTrace();
+                }
             }
 
         } catch (Exception e) {
