@@ -1,8 +1,13 @@
 package com.be.udp;
 
+import com.be.dto.SensorMessage;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.HashMap;
+import java.util.Map;
 //TCP/UDP는 전송 방식 차이
 //보내기
 
@@ -12,19 +17,33 @@ import java.net.InetAddress;
 //TCP Client와 차이: 연결 없음, 그냥 던짐
 public class UdpClient {
 
-    public void sendMessage(String host, int port, String msg) {
-        try (DatagramSocket socket = new DatagramSocket()) {
+    public static void main(String[] args) throws Exception {
 
-            byte[] data = msg.getBytes();
-            InetAddress address = InetAddress.getByName(host);
+        ObjectMapper objectMapper = new ObjectMapper();
 
-            DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
-            socket.send(packet);
+        SensorMessage message = new SensorMessage();
+        message.setProtocol("UDP");
+        message.setSourceId("sensor-002"); // TCP와 구분
+        message.setType("TEMP");
+        message.setTimestamp(System.currentTimeMillis());
 
-            System.out.println("[UDP CLIENT] Sent: " + msg);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("value", 26.3);
+        payload.put("unit", "C");
+        message.setPayload(payload);
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        String json = objectMapper.writeValueAsString(message);
+        byte[] data = json.getBytes();
+
+        DatagramSocket socket = new DatagramSocket();
+        InetAddress address = InetAddress.getByName("localhost");
+
+        DatagramPacket packet =
+                new DatagramPacket(data, data.length, address, 6000);
+
+        socket.send(packet);
+        socket.close();
+
+        System.out.println("[UDP CLIENT] Sent: " + json);
     }
 }
