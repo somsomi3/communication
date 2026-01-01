@@ -32,10 +32,17 @@
 // /topic/log 구독
 // 서버가 보내면 자동 수신
     function send() {
-        // /app/log → 서버
-        // body: 문자열
-        // headers 없음 (빈 객체)
-        client.send('/app/log', {}, 'hello websocket');
+        const msg = {
+            protocol: "WS",
+            sourceId: "browser-1",
+            type: "LOG",
+            timestamp: Date.now(),
+            payload: {
+                value: "hello dto websocket"
+            }
+        };
+
+        client.send('/app/log', {}, JSON.stringify(msg));
     }
 </script>
 

@@ -4,6 +4,8 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
+import com.be.dto.SensorMessage;
+
 //WebSocket용 컨트롤러
 
 @Controller
@@ -16,10 +18,8 @@ public class MessageController {
 //=> 요청, 응답의 개념이 아니라, 이벤트 처리개념.
 
     @SendTo("/topic/log")//서버 → /topic/log
-    public String echo(String message) {
-        //STOMP body
-        //JSON이면 DTO로 자동 매핑 가능
-        System.out.println("WS 수신: " + message);
+    public SensorMessage echo(SensorMessage message) {
+        System.out.println("WS 수신 DTO: " + message.getPayload());
         return message;
         // 받은 걸 그대로 다시 보냄
         // Echo 테스트
