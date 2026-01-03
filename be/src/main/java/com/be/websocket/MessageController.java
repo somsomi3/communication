@@ -1,7 +1,7 @@
 package com.be.websocket;
 
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import com.be.dto.SensorMessage;
@@ -11,18 +11,21 @@ import com.be.dto.SensorMessage;
 @Controller
 public class MessageController {
 
-    @MessageMapping("/log")//클라이언트 → /app/log
-//WebSocket + STOMP
-//메시지 기반
-//서버가 주도적으로 메시지 발행 가능
-//=> 요청, 응답의 개념이 아니라, 이벤트 처리개념.
 
-    @SendTo("/topic/log")//서버 → /topic/log
-    public SensorMessage echo(SensorMessage message) {
-        System.out.println("WS 수신 DTO: " + message.getPayload());
-        return message;
-        // 받은 걸 그대로 다시 보냄
-        // Echo 테스트
-        // WebSocket 통신 정상 여부 검증용
+    // 클라이언트가 요청하지 않아도
+    // 서버가 이벤트 발생 시 WebSocket으로 보내줌.
+    
+    // 서버가 직접 /topic/log으로 전송
+    private final SimpMessagingTemplate messagingTemplate;
+
+    public MessageController(SimpMessagingTemplate messagingTemplate) {
+        this.messagingTemplate = messagingTemplate;
+    }
+
+    @MessageMapping("/log")
+    public void handleLog(SensorMessage message) {
+        System.out.println("WS DTO 수신: " + message.getPayload());
+
+        messagingTemplate.convertAndSend("/topic/log", message);
     }
 }
