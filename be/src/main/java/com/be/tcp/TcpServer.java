@@ -49,12 +49,13 @@ public class TcpServer {
                         SensorMessage sm =
                                 objectMapper.readValue(message, SensorMessage.class);
 
-                       sensorDataService.saveFromMessage(sm);
-                       //+Redis에 저장
-                       sensorRealtimeService.saveLatest(sm);
+                        sensorDataService.saveFromMessage(sm);
+                        //+Redis에 저장
+                        sensorRealtimeService.saveLatest(sm);
 
-
-                        System.out.println("[TCP] Sensor data saved");
+                         // 3. 실시간 WebSocket 전송
+                        sensorRealtimeService.pushToWebSocket(sm);
+                                System.out.println("[TCP] Sensor data saved & pushed");
 
                     } catch (Exception e) {
                         System.out.println("[ERROR] Invalid TCP message");

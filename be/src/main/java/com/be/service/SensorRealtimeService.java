@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.Map;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.be.dto.SensorMessage;
@@ -15,10 +16,14 @@ import com.be.dto.SensorMessage;
 public class SensorRealtimeService {
 
     private final StringRedisTemplate redisTemplate;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public SensorRealtimeService(StringRedisTemplate redisTemplate) {
+    public SensorRealtimeService(StringRedisTemplate redisTemplate, SimpMessagingTemplate messagingTemplate) {
         this.redisTemplate = redisTemplate;
+        this.messagingTemplate = messagingTemplate;
     }
+
+    
 
     public void saveLatest(SensorMessage message) {
 
@@ -40,5 +45,9 @@ public class SensorRealtimeService {
 
         //TTL=데이터의 유효기간 설정 (실시간 데이터의 생명주기)
         redisTemplate.expire(key, Duration.ofSeconds(10));
+    }
+    // 실시간 WebSocket 전송
+    public void pushToWebSocket(SensorMessage message) {
+        messagingTemplate.convertAndSend("/topic/data", message);
     }
 }

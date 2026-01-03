@@ -24,6 +24,9 @@
             client.subscribe('/topic/log', msg => {
                 console.log('수신:', msg.body);
             });
+             client.subscribe('/topic/data', msg => {
+                console.log('DATA 수신:', JSON.parse(msg.body));
+            });
         });
     }
 // 동작 순서
@@ -43,6 +46,8 @@
         };
 
         client.send('/app/log', {}, JSON.stringify(msg));
+
+        
     }
 </script>
 
