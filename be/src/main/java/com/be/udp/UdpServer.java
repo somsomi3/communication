@@ -49,6 +49,9 @@ public class UdpServer {
                     // 2️. Redis 저장 (실시간)
                     sensorRealtimeService.saveLatest(sm);
 
+                    // 3. WebSocket 실시간 전송
+                    sensorRealtimeService.pushToWebSocket(sm);
+
                     System.out.println("[UDP] Sensor data saved to Redis");
 
                 } catch (Exception e) {
