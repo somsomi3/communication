@@ -28,11 +28,10 @@ public class SensorRealtimeService {
     public void saveLatest(SensorMessage message) {
 
         if (message.getSourceId() == null) return;
+        if (message.getPayload() == null) return;
 
         String key = "sensor:latest:" +  message.getProtocol().toLowerCase() + ":" + message.getSourceId();
         Map<String, Object> payload = message.getPayload();
-
-        if (payload == null) return;
 
         if (payload.get("value") != null)
             redisTemplate.opsForHash().put(key, "value", payload.get("value").toString());
@@ -47,7 +46,17 @@ public class SensorRealtimeService {
         redisTemplate.expire(key, Duration.ofSeconds(10));
     }
     // 실시간 WebSocket 전송
+    
+    //프로트콜에 따라, 보내는 topic이 달라짐
+    ///topic/data/tcp  → TCP 데이터만
+    // /topic/data/udp  → UDP 데이터만
+    // /topic/data/ws   → WebSocket 데이터만
     public void pushToWebSocket(SensorMessage message) {
-        messagingTemplate.convertAndSend("/topic/data", message);
+        if (message.getProtocol() == null) return;
+        String destination =
+            "/topic/data/" + message.getProtocol().toLowerCase();
+            
+        messagingTemplate.convertAndSend(destination, message);
     }
+
 }

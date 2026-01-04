@@ -24,8 +24,16 @@
             client.subscribe('/topic/log', msg => {
                 console.log('수신:', msg.body);
             });
-             client.subscribe('/topic/data', msg => {
-                console.log('DATA 수신:', JSON.parse(msg.body));
+            client.subscribe('/topic/data/tcp', msg => {
+                console.log('TCP 수신:', JSON.parse(msg.body));
+            });
+
+            client.subscribe('/topic/data/udp', msg => {
+                console.log('UDP 수신:', JSON.parse(msg.body));
+            });
+
+            client.subscribe('/topic/data/ws', msg => {
+                console.log('WS 수신:', JSON.parse(msg.body));
             });
         });
     }
