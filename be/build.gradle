@@ -40,6 +40,17 @@ dependencies {
     // OPC-UA 클라이언트 라이브러리
 	implementation 'org.eclipse.milo:sdk-client:0.6.7'
 
+	//Spring Integration 자동 설정
+	implementation 'org.springframework.boot:spring-boot-starter-integration'
+	//mqtt
+		//Spring 메시징 엔진
+	implementation 'org.springframework.integration:spring-integration-core'
+		//MQTT ↔ Spring 브릿지
+	implementation 'org.springframework.integration:spring-integration-mqtt'
+		//MQTT 네트워크 통신
+	implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
