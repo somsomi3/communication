@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,7 +13,7 @@ import org.springframework.stereotype.Service;
 public class KafkaConsumerService {
 
     private final ObjectMapper objectMapper;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final SensorRealtimeService sensorRealtimeService;
 
     @KafkaListener(topics = "sensor-log", groupId = "sensor-group")
     public void consume(String message) {
@@ -23,13 +22,15 @@ public class KafkaConsumerService {
             SensorMessage sensorMessage =
                     objectMapper.readValue(message, SensorMessage.class);
 
-            log.info("Kafka → SensorMessage 변환 성공: {}", sensorMessage);
+                        log.info("[Kafka] SensorMessage 수신: {}", sensorMessage);
 
-            //// 2. WebSocket으로 브로드캐스트 (여기서만!)
-            // 클라이언트 요청 없이도
-            // Kafka 이벤트 발생 시
-            // 서버가 WebSocket으로 브로드캐스트
-            messagingTemplate.convertAndSend("/topic/log", sensorMessage);
+            // 2. Redis 저장 (최신값)
+            sensorRealtimeService.saveLatest(sensorMessage);
+
+            // 3. WebSocket 브로드캐스트
+            sensorRealtimeService.pushToWebSocket(sensorMessage);
+
+            log.info("[Kafka] 실시간 처리 완료");
 
         } catch (Exception e) {
             log.error("Kafka 메시지 처리 실패", e);

@@ -3,8 +3,7 @@ package com.be.tcp;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import com.be.service.SensorDataService;
-import com.be.service.SensorRealtimeService;
+import com.be.service.KafkaProducerService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 //실행
@@ -15,20 +14,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class TcpRunner implements CommandLineRunner {
 
     private final ObjectMapper objectMapper;
-    private final SensorDataService sensorDataService;
-    private final SensorRealtimeService sensorRealtimeService;
+    private final KafkaProducerService kafkaProducer;
 
-    public TcpRunner(ObjectMapper objectMapper, SensorDataService sensorDataService, SensorRealtimeService sensorRealtimeService) {
+    public TcpRunner(ObjectMapper objectMapper, KafkaProducerService kafkaProducer) {
         this.objectMapper = objectMapper;
-        this.sensorDataService = sensorDataService;
-        this.sensorRealtimeService = sensorRealtimeService;
+        this.kafkaProducer = kafkaProducer;
     }
 
     @Override
     public void run(String... args) {
 
         //JSON → Java 객체 변환은 ObjectMapper가 반드시 필요
-        TcpServer server = new TcpServer(5000, objectMapper, sensorDataService, sensorRealtimeService);
+        TcpServer server = new TcpServer(5000, objectMapper, kafkaProducer);
         new Thread(server::start).start();
         System.out.println("[TCP RUNNER] TCP Server started");
     }

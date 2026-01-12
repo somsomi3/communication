@@ -1,7 +1,6 @@
 package com.be.service;
 
 import java.time.Duration;
-import java.util.Map;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -23,26 +22,27 @@ public class SensorRealtimeService {
         this.messagingTemplate = messagingTemplate;
     }
 
-    
-
     public void saveLatest(SensorMessage message) {
 
         if (message.getSourceId() == null) return;
         if (message.getPayload() == null) return;
 
-        String key = "sensor:latest:" +  message.getProtocol().toLowerCase() + ":" + message.getSourceId();
-        Map<String, Object> payload = message.getPayload();
+        String key = "sensor:latest:" +
+                message.getProtocol().toLowerCase() + ":" +
+                message.getSourceId();
 
-        if (payload.get("value") != null)
-            redisTemplate.opsForHash().put(key, "value", payload.get("value").toString());
-
-        if (payload.get("unit") != null)
-            redisTemplate.opsForHash().put(key, "unit", payload.get("unit").toString());
-
+        // 공통 메타데이터
+        redisTemplate.opsForHash().put(key, "protocol", message.getProtocol());
         redisTemplate.opsForHash().put(key, "type", message.getType());
         redisTemplate.opsForHash().put(key, "timestamp", String.valueOf(message.getTimestamp()));
 
-        //TTL=데이터의 유효기간 설정 (실시간 데이터의 생명주기)
+        // payload 전체 저장
+        message.getPayload().forEach((k, v) -> {
+            if (v != null) {
+                redisTemplate.opsForHash().put(key, k, v.toString());
+            }
+        });
+
         redisTemplate.expire(key, Duration.ofSeconds(10));
     }
     // 실시간 WebSocket 전송
@@ -57,6 +57,8 @@ public class SensorRealtimeService {
             "/topic/data/" + message.getProtocol().toLowerCase();
             
         messagingTemplate.convertAndSend(destination, message);
+        
+        System.out.println("[WS] Sent to " + destination);
     }
 
 }
