@@ -1,9 +1,7 @@
 package com.be.sql.entity;
 
-
-//entity 패키지: JPA가 DB 테이블과 1:1로 매핑하는 객체
 import jakarta.persistence.*;
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "sensor_data")
@@ -17,16 +15,20 @@ public class SensorDataEntity {
     private String sourceId;
     private String type;
 
-    //payload에서 선별한 핵심 데이터
+    // 핵심 측정값
     private Double value;
     private String unit;
 
-    //센서가 데이터를 측정한 시각(정렬 / 집계 / 통계에 필수)
-    private Instant timestamp;
+    // 센서가 측정한 시각
+    private LocalDateTime timestamp;
+
+    // 서버가 저장한 시각
+    private LocalDateTime createdAt;
 
     public SensorDataEntity() {}
 
-    // getter / setter
+    // --- getter / setter ---
+
     public Long getId() { return id; }
 
     public String getProtocol() { return protocol; }
@@ -44,6 +46,9 @@ public class SensorDataEntity {
     public String getUnit() { return unit; }
     public void setUnit(String unit) { this.unit = unit; }
 
-    public Instant getTimestamp() { return timestamp; }
-    public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

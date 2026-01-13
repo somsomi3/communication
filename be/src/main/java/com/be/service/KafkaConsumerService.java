@@ -14,6 +14,7 @@ public class KafkaConsumerService {
 
     private final ObjectMapper objectMapper;
     private final SensorRealtimeService sensorRealtimeService;
+    private final SensorDataService sensorDataService;
 
     @KafkaListener(topics = "sensor-log", groupId = "sensor-group")
     public void consume(String message) {
@@ -24,10 +25,13 @@ public class KafkaConsumerService {
 
                         log.info("[Kafka] SensorMessage 수신: {}", sensorMessage);
 
-            // 2. Redis 저장 (최신값)
+            // 2. SQL 저장 (영속 데이터)
+            sensorDataService.saveFromMessage(sensorMessage);
+            
+            // 3. Redis 저장 (최신값)
             sensorRealtimeService.saveLatest(sensorMessage);
 
-            // 3. WebSocket 브로드캐스트
+            // 4. WebSocket 브로드캐스트
             sensorRealtimeService.pushToWebSocket(sensorMessage);
 
             log.info("[Kafka] 실시간 처리 완료");

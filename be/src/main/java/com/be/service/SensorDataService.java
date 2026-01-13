@@ -1,6 +1,8 @@
 package com.be.service;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -32,18 +34,26 @@ public class SensorDataService {
         entity.setProtocol(sm.getProtocol());
         entity.setSourceId(sm.getSourceId());
         entity.setType(sm.getType());
+        // 센서 측정 시각
         entity.setTimestamp(
-                Instant.ofEpochMilli(sm.getTimestamp())
+            LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(sm.getTimestamp()),
+                ZoneId.systemDefault()
+            )
         );
+        // 서버 저장 시각
+        entity.setCreatedAt(LocalDateTime.now());
+
 
         Map<String, Object> payload = sm.getPayload();
         if (payload != null) {
             Object value = payload.get("value");
             Object unit = payload.get("unit");
 
-            if (value instanceof Number) {
-                entity.setValue(((Number) value).doubleValue());
+            if (value != null) {
+                entity.setValue(Double.valueOf(value.toString()));
             }
+
             if (unit != null) {
                 entity.setUnit(unit.toString());
             }
