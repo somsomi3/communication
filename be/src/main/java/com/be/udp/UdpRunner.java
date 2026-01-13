@@ -3,7 +3,7 @@ package com.be.udp;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import com.be.service.SensorRealtimeService;
+import com.be.service.KafkaProducerService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
@@ -17,20 +17,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class UdpRunner implements CommandLineRunner {
 
     private final ObjectMapper objectMapper;
-    private final SensorRealtimeService sensorRealtimeService;
+    private final KafkaProducerService kafkaProducer;
 
     public UdpRunner(
             ObjectMapper objectMapper,
-            SensorRealtimeService sensorRealtimeService
+            KafkaProducerService kafkaProducer
     ) {
         this.objectMapper = objectMapper;
-        this.sensorRealtimeService = sensorRealtimeService;
+        this.kafkaProducer = kafkaProducer;
     }
 
     @Override
     public void run(String... args) {
         UdpServer server =
-                new UdpServer(6000, objectMapper, sensorRealtimeService);
+                new UdpServer(6000, objectMapper, kafkaProducer);
 
         new Thread(server::start).start();
         System.out.println("[UDP RUNNER] UDP Server started");

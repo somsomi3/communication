@@ -4,6 +4,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
 import com.be.dto.SensorMessage;
+import com.be.service.KafkaProducerService;
 import com.be.service.SensorRealtimeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -17,23 +18,20 @@ public class UdpServer {
 
     private final int port;
     private final ObjectMapper objectMapper;
-    private final SensorRealtimeService sensorRealtimeService;
+    private final KafkaProducerService kafkaProducer;
 
-    public UdpServer(
-            int port,
-            ObjectMapper objectMapper,
-            SensorRealtimeService sensorRealtimeService
-    ) {
+    public UdpServer(int port, ObjectMapper objectMapper, KafkaProducerService kafkaProducer) {
         this.port = port;
         this.objectMapper = objectMapper;
-        this.sensorRealtimeService = sensorRealtimeService;
+        this.kafkaProducer = kafkaProducer;
     }
 
     public void start() {
         try (DatagramSocket socket = new DatagramSocket(port)) {
             System.out.println("[UDP SERVER] Started on port " + port);
 
-            byte[] buffer = new byte[1024];
+            //UDP 패킷을 담는 수신 버퍼 <=> TCP: 스트림 (줄 단위, readLine())
+            byte[] buffer = new byte[2048];
 
             while (true) {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -46,13 +44,13 @@ public class UdpServer {
                     SensorMessage sm =
                             objectMapper.readValue(msg, SensorMessage.class);
 
-                    // 2️. Redis 저장 (실시간)
-                    sensorRealtimeService.saveLatest(sm);
+                    // 2️. UDP 메타데이터 보정
+                    sm.setProtocol("UDP");
+                    sm.setTimestamp(System.currentTimeMillis());
 
-                    // 3. WebSocket 실시간 전송
-                    sensorRealtimeService.pushToWebSocket(sm);
-
-                    System.out.println("[UDP] Sensor data saved to Redis");
+                    // 3️. Kafka로 전달
+                    kafkaProducer.sendSensorMessage("sensor-log", sm);
+                    System.out.println("[UDP] Message sent to Kafka");
 
                 } catch (Exception e) {
                     System.out.println("[ERROR] Invalid UDP message");
