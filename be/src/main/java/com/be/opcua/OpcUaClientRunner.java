@@ -59,15 +59,11 @@ public class OpcUaClientRunner {
             System.out.println("[OPC-UA] Connected to server");
 
             // 5️. NodeId 하나 읽기
-            NodeId nodeId = new NodeId(2, "Demo.Static.Scalar.Int32");
+            NodeId nodeId = new NodeId(2, "HelloWorld/ScalarTypes/Int32");
+            
+            DataValue value = client.readValue(0, TimestampsToReturn.Both, nodeId).get();
+            System.out.println(value.getValue().getValue());
 
-
-
-            DataValue value =
-                    client.readValue(0, TimestampsToReturn.Both, nodeId).get();
-
-            System.out.println("[OPC-UA] Read value: " +
-                    value.getValue().getValue());
 
         } catch (Exception e) {
             System.err.println("[OPC-UA] Error occurred");
