@@ -9,11 +9,16 @@ import org.eclipse.milo.opcua.stack.core.types.builtin.NodeId;
 import org.eclipse.milo.opcua.stack.core.types.enumerated.TimestampsToReturn;
 import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.be.dto.SensorMessage;
+import com.be.service.KafkaProducerService;
+
 import java.util.List;
+import java.util.Map;
 
 //공장 설비(OPC-UA)에서 나온 값을우리 시스템이 이해하는 ‘표준 메시지’로 받아오는 입구를 만드는 작업
 
@@ -23,9 +28,11 @@ import java.util.List;
 // → 그 값을 우리 시스템 메시지로 변환
 // → Kafka로 던짐
 @Component
+@RequiredArgsConstructor
 public class OpcUaClientRunner {
 
     private OpcUaClient client;
+    private final KafkaProducerService kafkaProducerService;
     //Kafka로 보낼 때
     // 스케줄링할 때
     // 여러 메서드에서 재사용하려고
@@ -80,17 +87,30 @@ public class OpcUaClientRunner {
     public void readNodes() {
         try {
             for (NodeId nodeId : nodeIds) {
-                DataValue value =
+                DataValue dataValue =
                         client.readValue(0, TimestampsToReturn.Both, nodeId).get();
 
+                Object sensorValue = dataValue.getValue().getValue();
+
                 System.out.println(
-                        "[OPC-UA] " + nodeId.getIdentifier() +
-                        " = " + value.getValue().getValue()
+                        "[OPC-UA] " + nodeId.getIdentifier() + " = " + sensorValue
                 );
-            }
-        } catch (Exception e) {
-            System.err.println("[OPC-UA] Read error");
-            e.printStackTrace();
+
+            SensorMessage message = new SensorMessage();
+            message.setProtocol("opc-ua");
+            message.setSourceId(nodeId.getIdentifier().toString());
+            message.setType(sensorValue.getClass().getSimpleName());
+            message.setTimestamp(System.currentTimeMillis());
+            message.setPayload(Map.of("value", sensorValue));;
+
+            kafkaProducerService.sendSensorMessage(
+                    "opcua-data",
+                    message
+            );
         }
-    } 
+    } catch (Exception e) {
+        System.err.println("[OPC-UA] Read & Kafka publish error");
+        e.printStackTrace();
+    }
+}
 }
