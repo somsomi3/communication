@@ -9,6 +9,8 @@ import org.eclipse.milo.opcua.stack.core.types.builtin.NodeId;
 import org.eclipse.milo.opcua.stack.core.types.enumerated.TimestampsToReturn;
 import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
 import jakarta.annotation.PostConstruct;
+
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -23,13 +25,21 @@ import java.util.List;
 @Component
 public class OpcUaClientRunner {
 
+    private OpcUaClient client;
+    //Kafka로 보낼 때
+    // 스케줄링할 때
+    // 여러 메서드에서 재사용하려고
 
+     // 읽을 NodeId 목록
+    private final List<NodeId> nodeIds = List.of(
+            new NodeId(2, "HelloWorld/ScalarTypes/Int32"),
+            new NodeId(2, "HelloWorld/ScalarTypes/Float"),
+            new NodeId(2, "HelloWorld/ScalarTypes/Double")
+    );
+
+    //연결은 한번
     @PostConstruct
-    public void start() {
-        run();
-    }
-
-    public void run() {
+    public void init() {
         try {
             // 1️. OPC-UA 서버 Endpoint
             //로컬 OPC-UA Demo Server 주소 (통신 대상 위치)
@@ -53,19 +63,22 @@ public class OpcUaClientRunner {
                     .build();
 
             // 4️. Client 생성 + 연결
-            OpcUaClient client = OpcUaClient.create(config);
+            client = OpcUaClient.create(config);
             client.connect().get();
 
             System.out.println("[OPC-UA] Connected to server");
 
-            // 5️. 여러 NodeId 정의
-            List<NodeId> nodeIds = List.of(
-                    new NodeId(2, "HelloWorld/ScalarTypes/Int32"),
-                    new NodeId(2, "HelloWorld/ScalarTypes/Float"),
-                    new NodeId(2, "HelloWorld/ScalarTypes/Double")
-            );
-            
-            // 6. NodeId별 값 읽기
+        } catch (Exception e) {
+            System.err.println("[OPC-UA] Error occurred");
+            e.printStackTrace();
+        }
+    }
+
+
+    // 5초마다 OPC-UA 값 읽기
+    @Scheduled(fixedRate = 5000)    //값 계속 읽기
+    public void readNodes() {
+        try {
             for (NodeId nodeId : nodeIds) {
                 DataValue value =
                         client.readValue(0, TimestampsToReturn.Both, nodeId).get();
@@ -75,11 +88,9 @@ public class OpcUaClientRunner {
                         " = " + value.getValue().getValue()
                 );
             }
-
-
         } catch (Exception e) {
-            System.err.println("[OPC-UA] Error occurred");
+            System.err.println("[OPC-UA] Read error");
             e.printStackTrace();
         }
-    }
+    } 
 }
