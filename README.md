@@ -66,8 +66,8 @@ https://happyhappy3.tistory.com/category/%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8
                 ↓
    ┌────────────┴─────────────┐
    ↓                          ↓
-PostgreSQL                Redis Pub/Sub
-(sensor_data table)        (실시간 Push)
+PostgreSQL                Redis (최신값 저장)
+(sensor_data table)       (실시간 조회용 캐시)
    ↓
 SQL Query / Index Tuning
 (EXPLAIN ANALYZE)
@@ -79,7 +79,7 @@ SQL Query / Index Tuning
 2. Kafka Producer를 통해 Topic에 메시지 발행
 3. Kafka Consumer가 메시지 수신
 4. PostgreSQL에 로그성 데이터 저장
-5. Redis Pub/Sub을 통해 실시간 처리 가능 구조 설계
+5. Redis에 센서 최신값 저장 (실시간 조회용 캐시)
 6. EXPLAIN ANALYZE 기반 인덱스 유무 성능 비교 실습
 
 ## 6. SQL 성능 튜닝 실습
